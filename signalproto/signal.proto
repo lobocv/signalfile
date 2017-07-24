@@ -2,18 +2,18 @@ syntax = "proto3";
 package signal_proto;
 
 
-message Signal {
+message SignalData {
     int32 trace_number = 1;
     int32 time_stamp_seconds = 2;
     int32 time_stamp_nanoseconds = 3;
 }
 
 
-message SignalFile {
+message Signal {
 
     int32 sample_points = 1;
     int32 sampling_interval_ps = 2;
     int32 frequency_MHz = 3;
 
-    repeated Signal signals = 4;
+    repeated SignalData signals = 4;
 }
