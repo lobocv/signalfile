@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"signalfile/signalproto"
+	"os"
 )
 
 
 type SignalFile struct {
 
-	signal *signalproto.Signal
+	Signal *signalproto.Signal
 
 }
 
@@ -22,7 +23,7 @@ func NewSignalFile(signal *signalproto.Signal) SignalFile  {
 
 func (sigfile SignalFile) Serialize() []byte {
 	// Serialize the structure into a byte array
-	data, err := proto.Marshal(sigfile.signal)
+	data, err := proto.Marshal(sigfile.Signal)
 	if err != nil {
 		log.Fatal("marshaling error: ", err)
 	}
@@ -40,6 +41,44 @@ func Deserialize(data []byte) signalproto.Signal {
 }
 
 
+func (sigfile SignalFile) Save(path string)  {
+	// Write to file
+
+	fileout, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	byte_data := sigfile.Serialize()
+
+	_, err = fileout.Write(byte_data)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
+
+
+func (sigfile SignalFile) Load(path string)  {
+	// Read from file
+
+	filein, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	finfo, err := filein.Stat()
+
+	byte_data := make([]byte, finfo.Size())
+	_, err = filein.Read(byte_data)
+	if err != nil {
+		panic(err)
+	}
+	signal := Deserialize(byte_data)
+	sigfile.Signal = &signal
+
+}
+
+
 func main() {
 
 	_signals := [3]*signalproto.SignalData{{1, 10, 20}, {2, 11, 21}, {3, 12, 22}}
@@ -54,10 +93,14 @@ func main() {
 	}
 
 	sigfile := NewSignalFile(signal)
-	data := sigfile.Serialize()
 
+	//data := sigfile.Serialize()
+	//message := Deserialize(data)
 
-	message := Deserialize(data)
+	sigfile.Save("/tmp/line1.dt2")
+	sigfile.Load("/tmp/line1.dt2")
+
+	message := *sigfile.Signal
 
 	// Now signal and message contain the same data.
 	fmt.Printf("Original Message: %v\nRecieved Message: %v\n", signal.GetSamplePoints(), message.GetSamplePoints())
